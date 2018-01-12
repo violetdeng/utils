@@ -7,8 +7,10 @@
   },
   "dependencies": {
     "body-parser": "^1.18.2",
+    "config": "^1.29.1",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
+    "emailjs": "^1.0.12",
     "express": "~4.15.5",
     "jade": "~1.11.0",
     "mongodb": "^3.0.1",

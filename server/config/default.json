@@ -1,0 +1,25 @@
+{
+  "mail": {
+    "username": "695247186@qq.com",
+    "password": "qbgyvmqhdkmibdfj"
+  },
+  "leaves": {
+    "types": [
+      {
+        "key": "year",
+        "color": "#32CD32",
+        "title": "年假"
+      },
+      {
+        "key": "business",
+        "color": "#FF1493",
+        "title": "事假"
+      },
+      {
+        "key": "ill",
+        "color": "#A52A2A",
+        "title": "病假"
+      }
+    ]
+  }
+}
