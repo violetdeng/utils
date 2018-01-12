@@ -34,7 +34,7 @@
 
 <script>
 
-import { mapState, mapMutations } from 'vuex'
+import { mapActions } from 'vuex'
 import Datepicker from 'vuejs-datepicker'
 import VueTimepicker from './Timepicker.vue'
 import { Radio } from 'vue-checkbox-radio'
@@ -85,10 +85,10 @@ export default {
       }
     }
   },
+  created () {
+    this.getEvents()
+  },
   computed: {
-    ...mapState([
-      'events'
-    ]),
     currentEvent: function () {
       if (this.event) {
         return {
@@ -146,10 +146,11 @@ export default {
     }
   },
   methods: {
-    ...mapMutations([
-      'addEvent',
-      'updateEvent',
-      'deleteEvent'
+    ...mapActions([
+      'getEvents',
+      'add',
+      'update',
+      'delete'
     ]),
     submit () {
       const e = {
@@ -160,9 +161,13 @@ export default {
         end: moment(this.currentEvent.end.date).format('YYYY-MM-DD') + ' ' + this.currentEvent.end.time.HH + ':' + this.currentEvent.end.time.mm
       }
       if (this.currentEvent.id) {
-        this.updateEvent(e)
+        this.update(e).then(() => {
+          console.log('here')
+        })
       } else {
-        this.addEvent(e)
+        this.add(e).then(() => {
+          console.log('here')
+        })
       }
       this.$emit('submitEvent', e)
     },
@@ -170,7 +175,7 @@ export default {
       this.$emit('cancelEvent')
     },
     trash () {
-      this.deleteEvent(this.currentEvent.id)
+      this.delete(this.currentEvent.id)
       this.$emit('deleteEvent')
     }
   }

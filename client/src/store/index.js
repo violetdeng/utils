@@ -1,9 +1,11 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import createPersist from 'vuex-localstorage'
-import uuid from 'uuid/v1'
+import axios from 'axios'
 
 Vue.use(Vuex)
+
+const API = 'http://47.92.33.106:3000/leaves'
 
 const state = {
   events: []
@@ -12,8 +14,10 @@ const state = {
 export default new Vuex.Store({
   state,
   mutations: {
+    updateEvents (state, payload) {
+      state.events = payload
+    },
     addEvent (state, payload) {
-      payload.id = uuid()
       state.events.push(payload)
     },
     updateEvent (state, payload) {
@@ -28,8 +32,50 @@ export default new Vuex.Store({
       state.events.splice(index, 1)
     }
   },
-  getters: {},
-  actions: {},
+  getters: {
+    events (state) {
+      return state.events.map(e => {
+        return {
+          ...e,
+          id: e._id
+        }
+      })
+    }
+  },
+  actions: {
+    getEvents ({ commit }) {
+      return axios.get(API).then((response) => {
+        commit('updateEvents', response.data)
+      })
+    },
+    add (store, param) {
+      return new Promise((resolve, reject) => {
+        axios.post(API + '/add', param).then((response) => {
+          param.id = response.data
+          store.commit('addEvent', param)
+          resolve('ok')
+        })
+      })
+    },
+    update (store, param) {
+      return new Promise((resolve, reject) => {
+        axios.post(API + '/update', param).then((response) => {
+          store.commit('updateEvent', param)
+          resolve('ok')
+        })
+      })
+    },
+    delete (store, param) {
+      return new Promise((resolve, reject) => {
+        axios.post(API + '/delete', {
+          id: param
+        }).then((response) => {
+          store.commit('deleteEvent', param)
+          resolve('ok')
+        })
+      })
+    }
+  },
   plugins: [
     createPersist({
       namespace: 'namespace-for-state',

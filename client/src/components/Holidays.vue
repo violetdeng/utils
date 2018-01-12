@@ -14,7 +14,7 @@
 
 <script>
 
-import { mapState } from 'vuex'
+import { mapGetters } from 'vuex'
 import { FullCalendar } from 'vue-full-calendar'
 import MobileDetect from 'mobile-detect'
 import EventForm from './EventForm.vue'
@@ -31,7 +31,7 @@ export default {
     EventForm
   },
   computed: {
-    ...mapState([
+    ...mapGetters([
       'events'
     ]),
     config: function () {
