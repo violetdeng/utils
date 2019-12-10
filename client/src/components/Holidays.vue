@@ -1,6 +1,13 @@
 <template>
   <div class="calendar-wrapper">
     <full-calendar :events="events" :config="config" @day-click="dayClick" @event-selected="eventClick" ref="calendar"></full-calendar>
+    <div class="ui flowing popup bottom left transition" v-bind:class="{ visible: show }" ref="popup">
+      <sui-list>
+        <sui-list-item @click.native="eventUpdate">修改</sui-list-item>
+        <sui-list-item>发邮件</sui-list-item>
+        <sui-list-item>删除</sui-list-item>
+      </sui-list>
+    </div>
     <sui-modal v-model="open">
       <sui-modal-header>请假</sui-modal-header>
       <sui-modal-content>
@@ -16,6 +23,7 @@
 
 import { mapGetters } from 'vuex'
 import { FullCalendar } from 'vue-full-calendar'
+import $ from 'jquery'
 import MobileDetect from 'mobile-detect'
 import EventForm from './EventForm.vue'
 
@@ -64,10 +72,11 @@ export default {
   },
   data () {
     return {
-      open: true,
+      open: false,
       startDate: new Date(),
       endDate: new Date(),
-      event: null
+      event: null,
+      show: false
     }
   },
   methods: {
@@ -78,7 +87,15 @@ export default {
       this.event = undefined
     },
     eventClick (event, jsEvent, view) {
+      const pos = $(jsEvent.target).offset()
+      pos.top += $(jsEvent.target).height()
+      pos.left -= $(jsEvent.target).width()
+      this.show = true
+      $(this.$refs.popup).css(pos)
       this.event = event
+    },
+    eventUpdate () {
+      this.show = false
       this.open = true
     },
     toggle () {
