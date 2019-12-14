@@ -2,7 +2,7 @@
 <div>
   <div style="margin-bottom: 15px; text-align: right;">
     <el-button-group>
-      <el-button @click="showStatData" size="small" type="primary">统计</el-button>
+      <el-button @click="statOpen = true" size="small" type="primary">统计</el-button>
       <el-button @click="settingOpen = true" size="small" type="primary">设置</el-button>
     </el-button-group>
   </div>
@@ -42,6 +42,22 @@
         <el-button @click="open = false">取消</el-button>
       </el-form-item>
     </el-form>
+  </el-dialog>
+  <el-dialog
+    title="统计"
+    :visible.sync="statOpen"
+  >
+    <el-table
+      :data="statData">
+      <el-table-column
+        prop="type"
+        label="类型">
+      </el-table-column>
+      <el-table-column
+        prop="time"
+        label="时长（小时）">
+      </el-table-column>
+    </el-table>
   </el-dialog>
 </div>
 </template>
@@ -113,7 +129,8 @@ export default {
       },
       settings: {
         types: []
-      }
+      },
+      statOpen: false
     }
   },
   computed: {
@@ -123,13 +140,29 @@ export default {
         types[item.key] = item
       })
       return types
+    },
+    statData () {
+      let types = {}
+      this.events.forEach(ev => {
+        types[ev.type] || (types[ev.type] = 0)
+        types[ev.type] += moment(ev.end).diff(ev.start, 'hours')
+      })
+
+      let data = []
+      for (let type in types) {
+        data.push({
+          type: this.eventTypes[type] ? this.eventTypes[type].title : '',
+          time: types[type]
+        })
+      }
+      return data
     }
   },
   created () {
     api.get('/leaves/settings').then(result => {
       this.settings = result.data
+      this.loadLeaves()
     })
-    this.loadLeaves()
   },
   methods: {
     loadLeaves: _.debounce(function () {
@@ -257,30 +290,6 @@ export default {
             type: 'success'
           });
         }
-      })
-    },
-    showStatData() {
-      let content = '<div class="el-table"><table class="el-table__body">'
-      let types = {}
-      this.events.forEach(ev => {
-        types[ev.type] || (types[ev.type] = 0)
-        types[ev.type] ++
-      })
-
-      for (let type in types) {
-        if (this.eventTypes[type]) {
-          content += '<tr class="el-table__row"><td>'
-          content += this.eventTypes[type].title
-          content += '</td><td>'
-          content += types[type]
-          content += '</td></tr>'
-        }
-      }
-      content += '</table></div>'
-
-      this.$alert(content, '统计', {
-        dangerouslyUseHTMLString: true,
-        confirmButtonText: '关闭'
       })
     }
   }

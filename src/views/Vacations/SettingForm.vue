@@ -7,7 +7,7 @@
       { required: true, message: '收件人不能为空', trigger: 'blur' },
       { type: 'email', message: '收件人必须为邮箱地址'}
     ]"
-    label-width="80px"
+    label-width="100px"
   >
     <el-input v-model="form.mail.to"/>
   </el-form-item>
@@ -17,7 +17,7 @@
     :rules="[
       { type: 'email', message: '抄送必须为邮箱地址'}
     ]"
-    label-width="80px"
+    label-width="100px"
   >
     <el-input v-model="form.mail.cc"/>
   </el-form-item>
@@ -27,9 +27,54 @@
     :rules="[
       { required: true, message: '邮件模板不能为空', trigger: 'blur' }
     ]"
-    label-width="80px"
+    label-width="100px"
   >
     <el-input type="textarea" :rows="5" v-model="form.mail.template"/>
+  </el-form-item>
+  <el-form-item
+    label="邮件签名"
+    prop="mail.signature"
+    :rules="[
+      { required: true, message: '邮件签名不能为空' }
+    ]"
+    label-width="100px"
+  >
+    <el-upload
+      :http-request="uploadFile"
+      action=""
+      accept="image/png, image/jpeg"
+      :multiple="false"
+      :on-change="handleChange"
+      :file-list="fileList"
+      list-type="picture"
+    >
+      <el-button size="small" type="primary">点击上传</el-button>
+      <div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过500kb</div>
+    </el-upload>
+    <div v-if="signature">
+      <el-image style="height: 100px" :src="signature" fit="contain"></el-image>
+    </div>
+  </el-form-item>
+  <el-form-item
+    v-for="(worktime, index) in form.worktimes"
+    :label="'工作时段' + index"
+    :key="'worktime' + index"
+    :prop="'worktimes.' + index + '.value'"
+    :rules="[
+      { required: true, message: '工作时段不能为空', trigger: 'blur' },
+    ]"
+    label-width="100px">
+    <el-time-picker
+      is-range
+      v-model="worktime.value"
+      range-separator="至"
+      value-format="HH:mm"
+      start-placeholder="开始时间"
+      end-placeholder="结束时间"
+      placeholder="选择时间范围"
+      style="margin-right:10px;">
+    </el-time-picker>
+    <el-button v-if="form.worktimes.length > 1" @click.prevent="removeWorktime(index)">删除</el-button>
   </el-form-item>
   <el-row :gutter="20">
     <el-col :span="8">
@@ -97,12 +142,14 @@
   <el-form-item>
     <el-button type="primary" @click="onSubmit">立即保存</el-button>
     <el-button @click="add">新增假期类型</el-button>
+    <el-button @click="addWorktime">新增工作时段</el-button>
     <el-button @click="cancel">取消</el-button>
   </el-form-item>
 </el-form>
 </template>
 
 <script>
+import api from '@/api'
 
 const colors = [
   {
@@ -151,10 +198,14 @@ export default {
         mail: {
           to: this.value.mail.to || '',
           cc: this.value.mail.cc || '',
+          signature: this.value.mail.signature ? true : false,
           template: this.value.mail.template || ''
         },
+        worktimes: this.value.worktimes || [{ value: null }],
         types: this.value.types || []
-      }
+      },
+      signature: this.value.mail.signature,
+      fileList: []
     }
   },
   methods: {
@@ -176,6 +227,14 @@ export default {
         lightColor
       })
     },
+    addWorktime() {
+      this.form.worktimes.push({
+        value: null
+      })
+    },
+    removeWorktime(index) {
+      this.form.worktimes.splice(index, 1)
+    },
     pickColor() {
       for (let i in colors) {
         let color = colors[i]
@@ -193,6 +252,26 @@ export default {
     cancel() {
       this.$refs.form.resetFields()
       this.$emit('cancel')
+    },
+    handleChange(file, fileList) {
+      this.fileList = fileList.slice(-1);
+    },
+    uploadFile(file) {
+      let param = new FormData()
+      param.append('file', file.file)
+      api.post('/leaves/settings/upload', param, {
+        headers: {'Content-Type':'multipart/form-data'},
+        transformRequest: function (data) {
+          return data
+        }
+      }).then(result => {
+        if (result.result !== 0) {
+          this.fileList = []
+          this.form.mail.signature = false
+        } else {
+          this.form.mail.signature = true
+        }
+      })
     }
   }
 }
