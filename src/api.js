@@ -10,16 +10,17 @@ const instance = axios.create({
   withCredentials: true,
   transformRequest: [data => {
     return qs.stringify(data);
-  }],
-  headers:{
-    "Content-Type":"application/x-www-form-urlencoded"
-  }
+  }]
 });
 
 instance.interceptors.request.use(
   config => {
     if (localStorage.getItem('Authorization')) {
       config.headers.Authorization = 'Bearer ' + localStorage.getItem('Authorization');
+    }
+
+    if (!config.headers['Content-Type']) {
+      config.headers['Content-Type'] = 'application/x-www-form-urlencoded'
     }
 
     return config;
