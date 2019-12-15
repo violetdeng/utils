@@ -4,6 +4,7 @@
 var bodyParser = require('body-parser');
 var cors = require('cors');
 //var methodOverride = require('method-override');
+const fileUpload = require('express-fileupload');
 var cookieParser = require('cookie-parser');
 var path = require('path');
 var passport = require('passport');
@@ -20,6 +21,7 @@ module.exports = function(app) {
     credentials: true
   };
   app.use(cors(options));
+  app.use(fileUpload());
   //app.use(compression());
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(bodyParser.json());

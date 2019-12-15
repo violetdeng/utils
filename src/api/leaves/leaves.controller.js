@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
 const querystring = require('querystring');
 const mongoose = require('mongoose');
 const moment = require('moment');
@@ -57,7 +59,6 @@ exports.getLeaveList = function () {
 
 
 exports.add = function () {
-  // TODO dynamic messsage
   return compose()
     .use([
       check('type').notEmpty(),
@@ -220,7 +221,15 @@ exports.getSettings = function () {
     .use(function (req, res, next) {
 
       return User.findByIdAsync(req.user._id).then(function (user) {
-        return res.status(200).json({ result: 0, data: user.leave })
+        let p = path.resolve('./src/assets/' + user._id + '/signature.png')
+        let settings = Object.assign({}, user.leave)
+        let mail = {
+          ...settings.mail
+        }
+        let signature = fs.existsSync(p) ? fs.readFileSync(p) : false
+        mail.signature = signature ? 'data:image/png;base64,' + (new Buffer(signature).toString('base64')) : false
+        settings.mail = mail
+        return res.status(200).json({ result: 0, data: settings })
       }).catch(function (err) {
         return next(err);
       })
@@ -238,6 +247,7 @@ exports.saveSettings = function () {
       return User.findByIdAsync(req.user._id).then(function (user) {
         user.leave.types = req.body.types
         user.leave.mail = req.body.mail
+        user.leave.worktimes = req.body.worktimes
 
         return user.saveAsync().then(function () {
           return res.status(200).json({ result: 0 })
@@ -248,3 +258,33 @@ exports.saveSettings = function () {
 
     });
 };
+
+exports.upload = function () {
+  return compose()
+    .use([
+    ])
+    .use(checkErrors)
+    .use(function (req, res, next) {
+      let p = path.resolve('./src/assets/' + req.user._id)
+      if (fs.existsSync(p)) {
+        req.uploadPath = p
+        return next()
+      }
+      return fs.mkdir(p, { recursive: true }, err => {
+        if (err) {
+          return next(err)
+        }
+
+        req.uploadPath = p
+        next()
+      })
+    })
+    .use(function (req, res, next) {
+      return req.files.file.mv(req.uploadPath + '/signature.png', err => {
+        if (err) {
+          return next(err)
+        }
+        return res.status(200).json({ result: 0 })
+      })
+    });
+}

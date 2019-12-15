@@ -77,13 +77,16 @@ var UserSchema = new Schema({
     default: Date.now
   },
   leave: {
-    types: {
-      type: Array
-    },
     mail: {
       template: String,
       to: String,
       cc: String
+    },
+    types: {
+      type: Array
+    },
+    worktimes: {
+      type: Array
     }
   }
 });
