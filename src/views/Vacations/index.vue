@@ -57,6 +57,10 @@
         prop="time"
         label="时长（小时）">
       </el-table-column>
+      <el-table-column
+        prop="timelong"
+        label="总时长（小时）">
+      </el-table-column>
     </el-table>
   </el-dialog>
 </div>
@@ -125,7 +129,8 @@ export default {
       },
       form: {
         type: '',
-        time: ''
+        time: '',
+        timelong: ''
       },
       settings: {
         types: []
@@ -152,7 +157,9 @@ export default {
           this.settings.worktimes.forEach(worktime => {
             let worktimeRange = moment.range(datetime + worktime.value[0] + ':00', datetime + worktime.value[1] + ':00')
 
-            types[ev.type] += (range.intersect(worktimeRange).diff() / 3600 / 1000)
+            if (range.intersect(worktimeRange)) {
+              types[ev.type] += (range.intersect(worktimeRange).diff() / 3600 / 1000)
+            }
           })
         })
       }
@@ -161,7 +168,8 @@ export default {
       for (let type in types) {
         data.push({
           type: this.eventTypes[type] ? this.eventTypes[type].title : '',
-          time: types[type]
+          time: types[type],
+          timelong: this.eventTypes[type].timelong == -1 ? '不限' : this.eventTypes[type].timelong
         })
       }
       return data

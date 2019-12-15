@@ -10,7 +10,7 @@
     <el-container class="app-main">
       <el-aside style="width:150px" class="app-aside">
         <el-menu :router="true" :default-active="$route.path" class="app-menu">
-          <el-menu-item index="/holidays">
+          <el-menu-item index="/vacations">
             <i class="el-icon-menu"></i>
             <span slot="title">假期统计</span>
           </el-menu-item>

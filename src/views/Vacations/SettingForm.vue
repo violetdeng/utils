@@ -77,11 +77,14 @@
     <el-button v-if="form.worktimes.length > 1" @click.prevent="removeWorktime(index)">删除</el-button>
   </el-form-item>
   <el-row :gutter="20">
-    <el-col :span="8">
+    <el-col :span="6">
       <label class="el-form-item__label">类型</label>
     </el-col>
-    <el-col :span="8">
+    <el-col :span="6">
       <label class="el-form-item__label">名称</label>
+    </el-col>
+    <el-col :span="4">
+      <label class="el-form-item__label">时长</label>
     </el-col>
     <el-col :span="3">
       <label class="el-form-item__label">颜色</label>
@@ -95,7 +98,7 @@
     v-for="(type, index) in form.types"
     :key="index"
   >
-    <el-col :span="8">
+    <el-col :span="6">
       <el-form-item
         :prop="'types.' + index + '.key'"
         :rules="{
@@ -105,7 +108,7 @@
         <el-input v-model="type.key"/>
       </el-form-item>
     </el-col>
-    <el-col :span="8">
+    <el-col :span="6">
       <el-form-item
         :prop="'types.' + index + '.title'"
         :rules="{
@@ -113,6 +116,16 @@
         }"
       >
         <el-input v-model="type.title"/>
+      </el-form-item>
+    </el-col>
+    <el-col :span="4">
+      <el-form-item
+        :prop="'types.' + index + '.timelong'"
+        :rules="{
+          required: true, message: '时长不能为空', trigger: 'blur'
+        }"
+      >
+        <el-input v-model="type.timelong"/>
       </el-form-item>
     </el-col>
     <el-col :span="3">
@@ -223,6 +236,7 @@ export default {
       this.form.types.push({
         key: '',
         title: '',
+        timelong: -1,
         color,
         lightColor
       })
