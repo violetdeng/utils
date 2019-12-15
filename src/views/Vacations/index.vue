@@ -143,10 +143,19 @@ export default {
     },
     statData () {
       let types = {}
-      this.events.forEach(ev => {
-        types[ev.type] || (types[ev.type] = 0)
-        types[ev.type] += moment(ev.end).diff(ev.start, 'hours')
-      })
+      if (this.settings.worktimes) {
+        this.events.forEach(ev => {
+          types[ev.type] || (types[ev.type] = 0)
+          let datetime = moment(ev.start).format('YYYY-MM-DD ')
+          let range = moment.range(ev.start, ev.end)
+
+          this.settings.worktimes.forEach(worktime => {
+            let worktimeRange = moment.range(datetime + worktime.value[0] + ':00', datetime + worktime.value[1] + ':00')
+
+            types[ev.type] += (range.intersect(worktimeRange).diff() / 3600 / 1000)
+          })
+        })
+      }
 
       let data = []
       for (let type in types) {

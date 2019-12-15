@@ -5,6 +5,11 @@ import store from './store'
 import './plugins/element.js'
 import "./plugins/axios.js";
 
+import Moment from 'moment'
+import { extendMoment } from 'moment-range'
+
+extendMoment(Moment)
+
 Vue.config.productionTip = false
 
 new Vue({

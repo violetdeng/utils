@@ -13,6 +13,7 @@
     "jquery": "^3.4.1",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
+    "moment-range": "^4.0.2",
     "momentjs": "^2.0.0",
     "vue": "^2.6.10",
     "vue-axios": "^2.1.5",
