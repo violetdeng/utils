@@ -1,5 +1,6 @@
 import axios from "axios";
 import qs from "qs";
+import { router } from '@/main'
 
 const baseURL = process.env === "production" ? "/" : "/api";
 const homeURL = process.env === "production" ? "//violetdeng.com" : "//violetdeng.com:3000/auth/github?redirectUrl=http://localhost:8081#/login";
@@ -31,14 +32,13 @@ instance.interceptors.request.use(
 );
 
 instance.interceptors.response.use(function ({ data }) {
-  return data;
-}, function (error) {
-  if (error.response) {
-    if (error.response.status === 401) {
-      localStorage.removeItem('Authorization')
-      window.location = homeURL;
-    }
+  if (data.result === -1) {
+    localStorage.removeItem('Authorization')
+    router.push('/login')
+  } else {
+    return data;
   }
+}, function (error) {
   return Promise.reject(error);
 });
 

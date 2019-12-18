@@ -20,9 +20,11 @@ const actions = {
     instance
       .get("/user/me")
       .then(data => {
-        commit("setUser", data);
-        commit("loadUser", false);
-      });
+        if (data) {
+          commit("setUser", data);
+          commit("loadUser", false);
+        }
+      })
   }
 };
 

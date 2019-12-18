@@ -1,7 +1,7 @@
 <template>
-  <el-container class="app-wrapper">
+  <div class="app-wrapper">
     <router-view />
-  </el-container>
+  </div>
 </template>
 
 <script>

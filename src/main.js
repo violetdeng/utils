@@ -3,10 +3,12 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import './plugins/element.js'
-import "./plugins/axios.js";
+import './plugins/axios.js'
 
 import Moment from 'moment'
 import { extendMoment } from 'moment-range'
+
+import './assets/css/fontello.css'
 
 extendMoment(Moment)
 
@@ -17,3 +19,5 @@ new Vue({
   store,
   render: h => h(App)
 }).$mount('#app')
+
+export { router }
