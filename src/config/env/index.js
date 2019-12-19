@@ -25,7 +25,7 @@ var all = {
   //是否初始化数据
   seedDB: false,
   session:{
-    secrets: 'violet-secret',
+    secrets: 'violet-tools-secret',
   },
   //用户角色种类
   userRoles: ['user'],

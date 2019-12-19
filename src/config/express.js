@@ -40,4 +40,8 @@ module.exports = function(app) {
     cookie: config.session.cookie
   }));
   app.use(passport.initialize());
+
+  // view engine setup
+  app.set('views', path.join(__dirname, '../views'));
+  app.set('view engine', 'jade');
 };
