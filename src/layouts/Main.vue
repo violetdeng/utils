@@ -4,7 +4,7 @@
       <h1 class="logo"><img src="../assets/logo.svg" />violet's 工具平台</h1>
       <div class="app-tools">
         <span>{{ user.nickname }}</span>
-        <el-link :href="logout" style="margin-left: 10px;" type="primary">退出</el-link>
+        <el-link @click="logout" style="margin-left: 10px;" type="primary">退出</el-link>
       </div>
     </el-header>
     <el-container class="app-main">
@@ -25,7 +25,6 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { logout } from "@/api";
 
 export default {
   name: "Main",
@@ -47,8 +46,7 @@ export default {
   },
   data() {
     return {
-      isRouterAlice: true,
-      logout
+      isRouterAlice: true
     }
   },
   methods: {
@@ -63,6 +61,10 @@ export default {
       this.$nextTick(() => {
         this.isRouterAlice = true;
       });
+    },
+    logout() {
+      localStorage.removeItem('Authorization')
+      this.$router.push('/login')
     }
   }
 };

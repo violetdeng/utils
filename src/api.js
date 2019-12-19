@@ -2,8 +2,7 @@ import axios from "axios";
 import qs from "qs";
 import { router } from '@/main'
 
-const baseURL = process.env === "production" ? "/" : "/api";
-const homeURL = process.env === "production" ? "//violetdeng.com" : "//violetdeng.com:3000/auth/github?redirectUrl=http://localhost:8081#/login";
+const baseURL = "http://violetdeng.com:3000/"
 
 const instance = axios.create({
   baseURL,
@@ -43,9 +42,3 @@ instance.interceptors.response.use(function ({ data }) {
 });
 
 export default instance;
-
-const logout = baseURL + "?r=user/logout";
-
-export {
-  logout
-};
