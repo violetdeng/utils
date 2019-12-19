@@ -21,7 +21,7 @@ function authToken(credentialsRequired) {
     })
     .use(expressJwt({ 
       secret: config.session.secrets,
-      credentialsRequired:credentialsRequired //是否抛出错误
+      credentialsRequired: credentialsRequired //是否抛出错误
     }))
 }
 /**
@@ -85,7 +85,7 @@ function snsPassport() {
       req.session.passport = {
         redirectUrl: req.query.redirectUrl || '/'
       }
-      if(req.user){
+      if (req.user) {
         req.session.passport.userId = req.user._id;
       }
       next();
