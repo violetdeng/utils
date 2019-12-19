@@ -1,7 +1,7 @@
 <template>
-  <el-row :gutter="20" class="login-page">
-    <div class="login-wrapper">
-      <el-col :span="8" :offset="8" class="login-box">
+  <div class="login-page">
+    <el-row :gutter="20" class="login-wrapper">
+      <el-col :md="10" :sm="14" class="login-box">
         <el-card>
           <h1 class="title"><i class="icon-logo"></i>Violet's Tools</h1>
           <h2>登录</h2>
@@ -9,8 +9,8 @@
           <el-button type="primary" @click="gotoLogin('github')" icon="icon-github">Github</el-button>
         </el-card>
       </el-col>
-    </div>
-  </el-row>
+    </el-row>
+  </div>
 </template>
 
 <script>
@@ -36,6 +36,7 @@ export default {
 .login-page {
   height: 100%;
   background: url(~@/assets/images/bg.jpg) center;
+  padding: 0 10px;
 }
 .login-wrapper {
   height: 100%;
@@ -46,6 +47,7 @@ export default {
 .login-box {
   position: relative;
   top: -10%;
+  margin: 0 auto;
 }
 .title {
   text-align: center;
