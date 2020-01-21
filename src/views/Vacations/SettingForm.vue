@@ -1,19 +1,15 @@
 <template>
-<el-form ref="form" :model="form" label-width="0">
+<el-form ref="form" :model="form" :rules="rules" label-width="0">
   <el-form-item
     label="收件人"
     prop="mail.to"
-    :rules="[
-      { required: true, message: '收件人不能为空', trigger: 'blur' },
-      { type: 'email', message: '收件人必须为邮箱地址'}
-    ]"
     label-width="100px"
   >
     <el-input v-model="form.mail.to"/>
   </el-form-item>
   <el-form-item
     label="抄送"
-    prop="mail.to"
+    prop="mail.cc"
     :rules="[
       { type: 'email', message: '抄送必须为邮箱地址'}
     ]"
@@ -163,6 +159,18 @@
 
 <script>
 import api from '@/api'
+import schema from 'async-validator'
+
+const emailValidator = function (rule, value, callback, source, options) {
+  let pattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+  let emails = value.split(',')
+  for (let email of emails) {
+    if (pattern.test(email) === false) {
+      callback(new Error(email + '不是邮箱'))
+    }
+  }
+  callback()
+}
 
 const colors = [
   {
@@ -217,6 +225,14 @@ export default {
         worktimes: this.value.worktimes || [{ value: null }],
         types: this.value.types || []
       },
+      rules: {
+        mail: {
+          to: [
+            { required: true, message: '收件人不能为空', trigger: 'blur' },
+            { validator: emailValidator, message: '收件人必须为邮箱地址', trigger: 'blur' }
+          ]
+        }
+      },
       signature: this.value.mail.signature,
       fileList: []
     }
@@ -224,6 +240,7 @@ export default {
   methods: {
     onSubmit() {
       this.$refs.form.validate(valid => {
+          console.log(valid)
         if (valid) {
           this.$emit('input', this.form)
         } else {
