@@ -167,6 +167,20 @@ const sendMail = function (req, res, next) {
 
   let time = start.format('YYYY-MM-DD HH:mm:ss') + ' 到 ' + end.format('YYYY-MM-DD HH:mm:ss')
 
+  let datetime = start.format('YYYY-MM-DD ')
+  let range = moment.range(leave.start, leave.end)
+  let hours = 0
+  req.user.leave.worktimes.forEach(worktime => {
+    let worktimeRange = moment.range(datetime + worktime.value[0] + ':00', datetime + worktime.
+        value[1] + ':00')
+
+      if (range.intersect(worktimeRange)) {
+        hours += range.intersect(worktimeRange).diff() / 3600 / 1000
+      }
+  })
+  let days = Math.ceil(hours / 8)
+  hours = hours - days * 8
+
   const server = email.server.connect({
     user: config.mail.username,
     password: config.mail.password,
@@ -180,6 +194,9 @@ const sendMail = function (req, res, next) {
 
   let template = req.user.leave.mail.template.replace('{{leaveTitle}}', leaveText !== undefined ? leaveText.title : leaveType)
   template = template.replace('{{leaveTime}}', time)
+  template = template.replace('{{leaveHours}}', hours)
+  template = template.replace('{{leaveDays}}', days)
+  template += '</br></br><img src="cid:my-signature">'
 
   server.send({
     from: config.mail.username,
@@ -195,14 +212,15 @@ const sendMail = function (req, res, next) {
       {
         path: "src/assets/signature.png",
         type: "image/png",
+        inline: true,
         headers: {
-          "Content-ID": "<my-image>"
-        },
-        name: 'signature.png'
+          "Content-ID": "<my-signature>"
+        }
       }
     ]
   }, function (err, message) {
     if (err) {
+      return res.status(200).json({ result: -1, leave_id: leave.id });
       next(err)
     } else {
       leave.status = 1

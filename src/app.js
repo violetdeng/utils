@@ -8,6 +8,9 @@ var mongoose = require('mongoose');
 var config = require('./config/env');
 var path = require('path');
 var fs = require('fs');
+var Moment = require('moment');
+var MomentRange = require('moment-range');
+MomentRange.extendMoment(Moment);
 
 // 连接数据库.
 mongoose.connect(config.mongo.uri, config.mongo.options);

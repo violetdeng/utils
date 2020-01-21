@@ -72,7 +72,7 @@ function hasRole(roleRequired) {
  * 生成token
  */
 function signToken(id) {
-  return jwt.sign({ _id: id }, config.session.secrets, { expiresIn: 60 });
+  return jwt.sign({ _id: id }, config.session.secrets, { expiresIn: '7 days' });
 }
 
 /**

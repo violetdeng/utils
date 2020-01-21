@@ -51,8 +51,8 @@ var all = {
   snsLogins:['github'],
   // 邮箱配置
   mail: {
-    username: 'denghongyan1988@qq.com',
-    password: 'vpimokoeecvmbchf'
+    username: '695247186@qq.com',
+    password: 'vxycarcmxllubdhg'
   }
 };
 
