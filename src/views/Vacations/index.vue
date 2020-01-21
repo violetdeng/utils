@@ -274,13 +274,18 @@ export default {
         ...params,
         start: this.form.time[0],
         end: this.form.time[1]
-      }).then(({ result, data }) => {
+      }).then(({ result, data, message }) => {
         if (result === 0) {
           this.toggle()
           this.loadLeaves()
           this.$message({
             message: '申请成功',
             type: 'success'
+          });
+        } else {
+          this.$message({
+            message: '申请失败: ' + message,
+            type: 'error'
           });
         }
       }).finally(() => {
