@@ -2700,6 +2700,11 @@ deepmerge@^1.2.0, deepmerge@^1.5.2:
   resolved "https://registry.npm.taobao.org/deepmerge/download/deepmerge-1.5.2.tgz?cache=0&sync_timestamp=1572279720382&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fdeepmerge%2Fdownload%2Fdeepmerge-1.5.2.tgz#10499d868844cdad4fee0842df8c7f6f0c95a753"
   integrity sha1-EEmdhohEza1P7ghC34x/bwyVp1M=
 
+deepmerge@^4.2.2:
+  version "4.2.2"
+  resolved "https://registry.npm.taobao.org/deepmerge/download/deepmerge-4.2.2.tgz?cache=0&sync_timestamp=1572279720382&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fdeepmerge%2Fdownload%2Fdeepmerge-4.2.2.tgz#44d2ea3679b8f4d4ffba33f03d865fc1e7bf4955"
+  integrity sha1-RNLqNnm49NT/ujPwPYZfwee/SVU=
+
 default-gateway@^4.2.0:
   version "4.2.0"
   resolved "https://registry.npm.taobao.org/default-gateway/download/default-gateway-4.2.0.tgz?cache=0&sync_timestamp=1573764719154&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fdefault-gateway%2Fdownload%2Fdefault-gateway-4.2.0.tgz#167104c7500c2115f6dd69b0a536bb8ed720552b"
@@ -6989,6 +6994,11 @@ shell-quote@^1.6.1:
   resolved "https://registry.npm.taobao.org/shell-quote/download/shell-quote-1.7.2.tgz#67a7d02c76c9da24f99d20808fcaded0e0e04be2"
   integrity sha1-Z6fQLHbJ2iT5nSCAj8re0ODgS+I=
 
+shvl@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.npm.taobao.org/shvl/download/shvl-2.0.0.tgz#55fd550b6e81bf7574f2f576b8b5c1ffae74e10f"
+  integrity sha1-Vf1VC26Bv3V08vV2uLXB/6504Q8=
+
 signal-exit@^3.0.0, signal-exit@^3.0.2:
   version "3.0.2"
   resolved "https://registry.npm.taobao.org/signal-exit/download/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
@@ -7951,6 +7961,11 @@ vue-cli-plugin-element@^1.0.1:
   resolved "https://registry.npm.taobao.org/vue-cli-plugin-element/download/vue-cli-plugin-element-1.0.1.tgz#34e58fb65b36cf59afaf14f503288e5e578b1554"
   integrity sha1-NOWPtls2z1mvrxT1AyiOXleLFVQ=
 
+vue-fragment@^1.5.1:
+  version "1.5.1"
+  resolved "https://registry.npm.taobao.org/vue-fragment/download/vue-fragment-1.5.1.tgz#44c070d55ed1e9a6c698ef57a5c83f64bb06feeb"
+  integrity sha1-RMBw1V7R6abGmO9Xpcg/ZLsG/us=
+
 vue-full-calendar@^2.7.0:
   version "2.7.0"
   resolved "https://registry.npm.taobao.org/vue-full-calendar/download/vue-full-calendar-2.7.0.tgz#1963d6612b5459633e30763e7bdf1d6acc304883"
@@ -8006,6 +8021,14 @@ vue@^2.6.10:
   version "2.6.10"
   resolved "https://registry.npm.taobao.org/vue/download/vue-2.6.10.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fvue%2Fdownload%2Fvue-2.6.10.tgz#a72b1a42a4d82a721ea438d1b6bf55e66195c637"
   integrity sha1-pysaQqTYKnIepDjRtr9V5mGVxjc=
+
+vuex-persistedstate@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.npm.taobao.org/vuex-persistedstate/download/vuex-persistedstate-3.0.1.tgz#6eacc3c416fe8cfe63c40d3ee7b8ed13aac4f04f"
+  integrity sha1-bqzDxBb+jP5jxA0+57jtE6rE8E8=
+  dependencies:
+    deepmerge "^4.2.2"
+    shvl "^2.0.0"
 
 vuex@^3.1.2:
   version "3.1.2"

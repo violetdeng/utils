@@ -5,6 +5,15 @@ import Login from '@/views/Login.vue'
 
 Vue.use(VueRouter)
 
+let MainRoutes = ['vacations', 'books'].map((name) => {
+  let filename = name.charAt(0).toUpperCase() + name.slice(1)
+  return {
+    path: `/${name}`,
+    name,
+    component: () => import(`@/views/${filename}/index.vue`)
+  }
+})
+
 const routes = [
   {
     path: '/',
@@ -14,11 +23,7 @@ const routes = [
         path: '/',
         redirect: '/vacations'
       },
-      {
-        path: '/vacations',
-        name: 'vacations',
-        component: () => import(/* webpackChunkName:'vacations'*/ '@/views/Vacations')
-      }
+      ...MainRoutes
     ]
   },
   {

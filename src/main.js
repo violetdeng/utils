@@ -5,6 +5,9 @@ import store from './store'
 import './plugins/element.js'
 import './plugins/axios.js'
 
+import { Plugin } from 'vue-fragment'
+Vue.use(Plugin)
+
 import Moment from 'moment'
 import { extendMoment } from 'moment-range'
 

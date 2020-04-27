@@ -11,8 +11,12 @@
       <el-aside style="width:150px" class="app-aside">
         <el-menu :router="true" :default-active="$route.path" class="app-menu">
           <el-menu-item index="/vacations">
-            <i class="el-icon-menu"></i>
+            <i class="el-icon-sunny"></i>
             <span slot="title">假期统计</span>
+          </el-menu-item>
+          <el-menu-item index="/books">
+            <i class="el-icon-notebook-1"></i>
+            <span slot="title">书籍</span>
           </el-menu-item>
         </el-menu>
       </el-aside>

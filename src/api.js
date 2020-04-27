@@ -31,7 +31,7 @@ instance.interceptors.request.use(
 );
 
 instance.interceptors.response.use(function ({ data }) {
-  if (data.result === -1) {
+  if (data.result === 401) {
     localStorage.removeItem('Authorization')
     router.push('/login')
   } else {

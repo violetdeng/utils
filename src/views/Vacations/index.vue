@@ -1,5 +1,5 @@
 <template>
-<div>
+<fragment>
   <div style="margin-bottom: 15px; text-align: right;">
     <el-button-group>
       <el-button @click="statOpen = true" size="small" type="primary">统计</el-button>
@@ -63,7 +63,7 @@
       </el-table-column>
     </el-table>
   </el-dialog>
-</div>
+</fragment>
 </template>
 
 <script>
