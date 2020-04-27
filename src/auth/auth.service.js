@@ -35,7 +35,7 @@ function isAuthenticated() {
       if (err.name === 'UnauthorizedError') {
         //return res.status(401).send();
         return res.status(200).json({
-          result: -1
+          result: 401
         });
       }
       next();

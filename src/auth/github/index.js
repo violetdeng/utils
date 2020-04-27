@@ -35,6 +35,7 @@ router
         //res.header('Authorization', token);
         //res.cookie('token', JSON.stringify(token),{domain:cookieDomain});
       }
+      console.log(snsmsg, redirectUrl);
       //res.cookie('snsmsg',JSON.stringify(snsmsg),{domain:cookieDomain, maxAge:30000});
       return res.redirect(redirectUrl);
     })(req, res, next);
