@@ -48,6 +48,28 @@
     </div>
   </el-form-item>
   </template>
+  <template v-if="form.type === 2">
+    <el-form-item
+      label="网站"
+      prop="website"
+      :rules="[
+        { required: true, message: '请选择网站' }
+      ]"
+      label-width="100px"
+    >
+    <el-radio v-model="form.website" :label="item.type" v-for="item in websites">{{ item.title }}【{{ item.website }}】</el-radio>
+    </el-form-item>
+    <el-form-item v-for="attr in attributes"
+      :label="attr.title"
+      label-width="100px"
+      :prop="'attributes.' + attr.name"
+      :rules="[
+        { required: true, message: attr.title + '不能为空' }
+      ]"
+    >
+      <el-input v-model="form.attributes[attr.name]"></el-input>
+    </el-form-item>
+  </template>
   <el-form-item>
     <el-button type="primary" @click="onSubmit">立即保存</el-button>
     <el-button @click="cancel">取消</el-button>
@@ -56,6 +78,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import api from '@/api'
 import schema from 'async-validator'
 
@@ -66,13 +89,35 @@ export default {
       type: Object
     }
   },
+  computed: {
+    ...mapGetters({
+      websites: 'books/downloadConfigure',
+    }),
+    attributes() {
+      if (this.form.website) {
+        let attrs = this.websites.find(item => {
+          return item.type === this.form.website
+        }).attributes
+
+        attrs.forEach(item => {
+          this.$set(this.form.attributes, item.name, '')
+        })
+
+        return attrs
+      } else {
+        return []
+      }
+    }
+  },
   data() {
     return {
       form: {
         title: this.value.title || '',
         author: this.value.author || '',
         type: 1,
-        file: null
+        file: null,
+        website: null,
+        attributes: {}
       },
       rules: {
         title: [
@@ -104,6 +149,16 @@ export default {
       this.$emit('cancel')
     },
     handleChange(file, fileList) {
+      let name = file.name.replace('.txt', '')
+      let parts = name.split('-')
+      let title = name
+      let author
+      if (parts.length > 1) {
+        author = parts.shift()
+        title = parts.join()
+      }
+      if (!this.form.title) this.form.title = title
+      if (!this.form.author) this.form.author = author
       this.fileList = fileList.slice(-1);
     },
     uploadFile(file) {

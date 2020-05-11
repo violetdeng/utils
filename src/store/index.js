@@ -11,8 +11,16 @@ export default new Vuex.Store({
   state: {
   },
   mutations: {
+    //SOCKET_update_books() {
+    //  console.log('update')
+    //}
   },
   actions: {
+    SOCKET_messages({ commit }, payload) {
+      payload.forEach(item => {
+        commit('books/update', JSON.parse(item.content))
+      })
+    }
   },
   modules: {
     user,

@@ -8,6 +8,23 @@ import './plugins/axios.js'
 import { Plugin } from 'vue-fragment'
 Vue.use(Plugin)
 
+import VueSocketIO from 'vue-socket.io'
+import SocketIO from 'socket.io-client'
+
+Vue.use(new VueSocketIO({
+  connection: SocketIO('http://violetdeng.com:3000', {
+    query: {
+      access_token: localStorage.getItem('Authorization')
+    },
+    reconnectionAttempts: 2
+  }),
+  vuex: {
+    store,
+    actionPrefix: 'SOCKET_',
+    mutationPrefix: 'SOCKET_'
+  }
+}))
+
 import Moment from 'moment'
 import { extendMoment } from 'moment-range'
 

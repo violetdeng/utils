@@ -5,14 +5,17 @@ const state = {
   loading: false,
   changing: false,
   data: [],
-  total: 0
+  total: 0,
+  downloadConfigure: null
 };
 
 // getters
 const getters = {
   loading: state => state.loading,
   all: state => state.data,
-  changing: state => state.changing
+  count: state => state.total,
+  changing: state => state.changing,
+  downloadConfigure: state => state.downloadConfigure
 };
 
 // actions
@@ -30,14 +33,31 @@ const actions = {
 
   add({ commit }, data) {
     commit("change", true);
-    instance
+    return instance
       .post("/books/add", data)
       .then(result => {
         if (result.result === 0) {
           commit("add", {
-            id: result.data,
+            _id: result.data,
+            status: data.type === 1 ? 2 : 0,
             ...data
           })
+        } else {
+          return Promise.reject(result.errors)
+        }
+      })
+      .finally(() => commit("change", false))
+  },
+
+  rename({ commit }, data) {
+    commit("change", true);
+    return instance
+      .post("/books/update", data)
+      .then(result => {
+        if (result.result === 0) {
+          commit('rename', result.data)
+        } else {
+          return Promise.reject(result.errors)
         }
       })
       .finally(() => commit("change", false))
@@ -45,11 +65,25 @@ const actions = {
 
   destroy({ commit }, id) {
     commit("change", true);
-    instance
+    return instance
       .get("/books/destroy", { params: { id } })
-      .then(data => {
-        if (data.result === 0) {
+      .then(result => {
+        if (result.result === 0) {
           commit('destroy', id)
+        } else {
+          return Promise.reject(result.errors)
+        }
+      })
+      .finally(() => commit("change", false))
+  },
+
+  download({ commit }, id) {
+    commit("change", true);
+    return instance
+      .get("/books/download", { params: { id } })
+      .then(result => {
+        if (result.result !== 0) {
+          return Promise.reject(result.errors)
         }
       })
       .finally(() => commit("change", false))
@@ -64,7 +98,8 @@ const mutations = {
 
   set(state, data) {
     state.data = data.data
-    state.total = state.data.count
+    state.total = data.count
+    state.downloadConfigure = data.config
   },
 
   add(state, data) {
@@ -74,6 +109,26 @@ const mutations = {
 
   change(state, loading) {
     state.changing = loading
+  },
+
+  update(state, data) {
+    state.data = state.data.map(item => {
+      if (item._id !== data._id) {
+        return item
+      } else {
+        return data
+      }
+    })
+  },
+
+  rename(state, data) {
+    state.data = state.data.map(item => {
+      if (item._id !== data._id) {
+        return item
+      } else {
+        return data
+      }
+    })
   },
 
   destroy(state, id) {
