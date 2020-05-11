@@ -13,7 +13,9 @@ var all = {
     options: {
       user: process.env.MONGO_USERNAME || '', 
       pass: process.env.MONGO_PASSWORD || '',
-      useNewUrlParser: true
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useFindAndModify: false
     }
   },
   //redis 配置

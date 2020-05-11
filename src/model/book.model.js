@@ -21,7 +21,21 @@ var BookSchema = new Schema({
     type: Number,
     default: 0
   },
-  file: String
+  crawlers: {
+    website: String,
+    downloadPid: {
+      type: String
+    },
+    attributes: {
+      type: Object,
+      default: {}
+    },
+    errors: {
+      type: Array,
+      default: []
+    }
+  },
+  file: String,
 }, {
   timestamps: true
 });
@@ -29,6 +43,13 @@ var BookSchema = new Schema({
 /**
  * Virtuals
  */
+BookSchema
+  .virtual('downloadConfigure')
+  .get(function() {
+    return {
+      'type': this.download,
+    };
+  });
 
 /**
  * methods

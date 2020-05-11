@@ -2,18 +2,20 @@
 
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
 const querystring = require('querystring');
 const mongoose = require('mongoose');
 const moment = require('moment');
 const crypto = require('crypto');
 const email = require('emailjs');
+const logger = require('@/logger');
 const Book = mongoose.model('Book');
 const User = mongoose.model('User');
-//var Logs = mongoose.model('Logs');
+const Message = mongoose.model('Message');
 const compose = require('composable-middleware');
 const { check, validationResult } = require('express-validator');
 const config = require('../../config/env')
-
+const downloadConfig = require('../../crawlers');
 
 function checkErrors(req, res, next) {
   const errors = validationResult(req);
@@ -29,7 +31,7 @@ exports.all = function () {
     ])
     .use(checkErrors)
     .use(function (req, res, next) {
-      var currentPage = (parseInt(req.query.currentPage) > 0)?parseInt(req.query.currentPage):1;
+      var currentPage = (parseInt(req.query.page) > 0)?parseInt(req.query.page):1;
       var itemsPerPage = (parseInt(req.query.itemsPerPage) > 0)?parseInt(req.query.itemsPerPage):10;
       var startRow = (currentPage - 1) * itemsPerPage;
 
@@ -43,18 +45,18 @@ exports.all = function () {
 
       var query = Book.find({ userId: userId });
 
-      query.countAsync().then(function (count) {
+      query.countDocuments((err, count) => {
+        if (err) {
+          return next(err);
+        }
         return Book.find({ userId: userId })
-          //.skip(startRow)
-          //.limit(itemsPerPage)
-          //.sort(sortName)
+          .skip(startRow)
+          .limit(itemsPerPage)
+          .sort(sortName)
           .exec().then(function (items) {
-            return res.status(200).json({ data: items, count:count });
+            return res.status(200).json({ data: items, count: count, config: downloadConfig });
           })
-      }).catch(function (err) {
-        return next(err);
       })
-
     });
 };
 
@@ -83,24 +85,15 @@ exports.add = function () {
             return true
           })
           return exists
-        })
+        }).withMessage('必须上传文件'),
+      check('website').if((value, { req }) => req.body.type === 2)
+        .notEmpty().withMessage('网站不能为空'),
+      check('attributes').if((value, { req }) => req.body.type === 2)
+        .notEmpty().withMessage('属性不能为空')
+        // TODO 检查属性值不能为空
     ])
     .use(checkErrors)
-    .use(function (req, res, next) {
-      let p = path.resolve('./src/store/' + req.user._id + '/books/' + req.body.author)
-      if (fs.existsSync(p)) {
-        req.uploadPath = p
-        return next()
-      }
-      return fs.mkdir(p, { recursive: true }, err => {
-        if (err) {
-          return next(err)
-        }
-
-        req.uploadPath = p
-        next()
-      })
-    })
+    .use(createBookDir)
     .use(function (req, res, next) {
 
       var book = new Book(req.body);
@@ -109,6 +102,9 @@ exports.add = function () {
       if (book.type === 1) {
         book.status = 2
         book.file = req.uploadPath + '/' + book.author + '-' + book.title + '.txt'
+      } else if (book.type === 2) {
+        book.crawlers.website = req.body.website
+        book.crawlers.attributes = req.body.attributes
       }
 
       return book.saveAsync().then(book => {
@@ -128,8 +124,7 @@ exports.add = function () {
         return next(err);
       });
     })
-  // TODO 开始下载
-    //.use(sendMail)
+    .use(startToDownload)
 }
 
 exports.destroy = function () {
@@ -153,7 +148,13 @@ exports.destroy = function () {
     ])
     .use(checkErrors)
     .use(function (req, res, next) {
-      Book.findByIdAndRemoveAsync(req.query.id).then(function(leave) {
+      Book.findByIdAndRemoveAsync(req.query.id).then(function(book) {
+        if (book.type === 1) {
+          try {
+            fs.unlinkSync(book.file)
+          } catch(e) {
+          }
+        }
         return res.status(200).json({ result: 0 });
       }).catch(function (err) {
         return next(err);
@@ -169,21 +170,33 @@ exports.update = function (req,res) {
           if (!value.match(/^[0-9a-fA-F]{24}$/)) {
             throw new Error('ID格式错误')
           }
+          return Book.findByIdAsync(value).then(function (book) {
+            if (!book) {
+              throw new Error('ID不存在')
+            } else {
+              if (book.userId != req.user.id) {
+                throw new Error('不能修改别人的内容')
+              }
+            }
+          })
         }),
-      check('type').notEmpty().withMessage('类型不能为空'),
-      check('start').isISO8601().withMessage('开始时间不正确'),
-      check('end').isISO8601().withMessage('结束时间不正确')
+      check('author').notEmpty(),
+      check('title').notEmpty()
     ])
     .use(checkErrors)
+    .use(createBookDir)
     .use(function (req, res, next) {
-      Book.findByIdAsync(req.body.id).then(function (leave) {
-        leave.type = req.body.type
-        leave.start = req.body.start
-        leave.end = req.body.end
+      Book.findByIdAsync(req.body.id).then(function (book) {
+        book.author = req.body.author
+        book.title = req.body.title
+        if (book.type === 1) {
+          let newFile = req.uploadPath + '/' + req.body.author + '-' + req.body.title + '.txt'
+          fs.renameSync(book.file, newFile)
+          book.file = newFile
+        }
 
-        leave.saveAsync().then(leave => {
-          req.leave = leave
-          next()
+        book.saveAsync().then(book => {
+          return res.status(200).json({ result: 0, data: book });
         }).catch(err => {
           next(err)
         })
@@ -191,130 +204,131 @@ exports.update = function (req,res) {
         next(err)
       })
     })
-    .use(sendMail)
+    //.use(sendMail)
 }
 
-const sendMail = function (req, res, next) {
+function createBookDir(req, res, next) {
+  let p = path.resolve('./src/store/' + req.user._id + '/books/' + req.body.author)
 
-  let leave = req.leave
-
-  if (req.body.send !== 'send') {
-    return res.status(200).json({ result: 0, leave_id: leave.id });
+  if (fs.existsSync(p)) {
+    req.uploadPath = p
+    return next()
   }
+  return fs.mkdir(p, { recursive: true }, err => {
+    if (err) {
+      return next(err)
+    }
 
-  let leaveType = leave.type
-  let start = moment(leave.start)
-  let end = moment(leave.end)
-
-  let time = start.format('YYYY-MM-DD HH:mm:ss') + ' 到 ' + end.format('YYYY-MM-DD HH:mm:ss')
-
-  let datetime = start.format('YYYY-MM-DD ')
-  let range = moment.range(leave.start, leave.end)
-  let hours = 0
-  req.user.leave.worktimes.forEach(worktime => {
-    let worktimeRange = moment.range(datetime + worktime.value[0] + ':00', datetime + worktime.
-        value[1] + ':00')
-
-      if (range.intersect(worktimeRange)) {
-        hours += range.intersect(worktimeRange).diff() / 3600 / 1000
-      }
+    req.uploadPath = p
+    next()
   })
-  let days = Math.ceil(hours / 8)
-  hours = hours - days * 8
+}
 
-  const server = email.server.connect({
-    user: config.mail.username,
-    password: config.mail.password,
-    host: 'smtp.qq.com',
-    ssl: true
+function startToDownload(req, res, next) {
+  let book = req.book;
+  let cmd = "cd " + path.resolve('./src') + ";node crawler.js " + book._id;
+  const postData = JSON.stringify({
+    'cmd': cmd,
+    'cb': 'http://violetdeng.com:3000/books/change?id=' + book._id
   });
 
-  let leaveText = req.user.leave.types.find(item => {
-    return item.key === leaveType
-  })
+  logger.debug(postData);
 
-  let template = req.user.leave.mail.template.replace('{{leaveTitle}}', leaveText !== undefined ? leaveText.title : leaveType)
-  template = template.replace('{{leaveTime}}', time)
-  template = template.replace('{{leaveHours}}', hours)
-  template = template.replace('{{leaveDays}}', days)
-  template += '</br></br><img src="cid:my-signature">'
-
-  server.send({
-    from: config.mail.username,
-    to: req.user.leave.mail.to,
-    cc: req.user.leave.mail.cc,
-    subject: '请假',
-    text: '',
-    attachment: [
-      {
-        data: template,
-        alternative: true
-      },
-      {
-        path: "src/assets/signature.png",
-        type: "image/png",
-        inline: true,
-        headers: {
-          "Content-ID": "<my-signature>"
-        }
-      }
-    ]
-  }, function (err, message) {
-    if (err) {
-      return res.status(200).json({ result: -1, leave_id: leave.id });
-      next(err)
-    } else {
-      leave.status = 1
-      return leave.saveAsync().then(() => {
-        return res.status(200).json({ result: 0, leave_id: leave.id });
-      })
+  const request = http.request({
+    host: '127.0.0.1',
+    port: 10000,
+    method: 'POST',
+    path: '/api/v1/command',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(postData)
     }
-  })
+  }, response => {
+    let result = '';
+    response.setEncoding('utf8');
+    response.on('data', chunk => {
+      result += chunk;
+    });
+    response.on('end', () => {
+      result = JSON.parse(result);
+      logger.debug(result);
+      if (result.error === undefined) {
+        return res.status(200).json({ result: -1 });
+      } else if (result.error === 0) {
+        book.crawlers.downloadPid = result.id
+        book.saveAsync().then(book => {
+          return res.status(200).json({ result: 0, data: book });
+        }).catch(err => {
+          next(err)
+        })
+      } else {
+        return res.status(200).json({ result: -1 });
+      }
+    });
+  });
+  request.on('error', (e) => {
+    logger.error(`problem with request: ${e.message}`);
+    next(e);
+  });
+  request.write(postData);
+  request.end();
 }
 
-exports.getSettings = function () {
+exports.replace = function () {
   return compose()
     .use([
+      check('id').trim().notEmpty().withMessage('ID不能为空')
+        .custom((value, { req }) => {
+          if (!value.match(/^[0-9a-fA-F]{24}$/)) {
+            throw new Error('ID格式错误')
+          }
+          return Book.findByIdAsync(value).then(function (book) {
+            if (!book) {
+              throw new Error('ID不存在')
+            } else {
+              if (book.userId != req.user.id) {
+                throw new Error('不能修改别人的内容')
+              }
+            }
+          })
+        }),
+      check('file').custom(async (value, { req }) => {
+          if (req.body.type !== 1) {
+            return true
+          }
+          if (!value) {
+            return false
+          }
+          let p = path.resolve('./src/assets/' + req.user._id + '/books/' + value)
+          let exists = await fs.stat(p, function (err, stats) {
+            if (err) {
+              return false
+            }
+            if (!stats.isFile()) {
+              return false
+            }
+            return true
+          })
+          return exists
+        }).withMessage('必须上传文件')
     ])
     .use(checkErrors)
     .use(function (req, res, next) {
 
-      return User.findByIdAsync(req.user._id).then(function (user) {
-        let p = path.resolve('./src/assets/' + user._id + '/signature.png')
-        let settings = Object.assign({}, user.leave)
-        let mail = {
-          ...settings.mail
-        }
-        let signature = fs.existsSync(p) ? fs.readFileSync(p) : false
-        mail.signature = signature ? 'data:image/png;base64,' + (new Buffer(signature).toString('base64')) : false
-        settings.mail = mail
-        return res.status(200).json({ result: 0, data: settings })
-      }).catch(function (err) {
-        return next(err);
-      })
+      Book.findByIdAsync(req.body.id).then(function (book) {
 
-    });
-};
+        book.type = 1
 
-exports.saveSettings = function () {
-  return compose()
-    .use([
-    ])
-    .use(checkErrors)
-    .use(function (req, res, next) {
-
-      return User.findByIdAsync(req.user._id).then(function (user) {
-        user.leave.types = req.body.types
-        user.leave.mail = req.body.mail
-        user.leave.worktimes = req.body.worktimes
-
-        return user.saveAsync().then(function () {
-          return res.status(200).json({ result: 0 })
+        book.saveAsync().then(book => {
+          fs.rename(path.resolve('./src/assets/' + req.user._id + '/books/' + req.body.file), book.file, err => {
+            if (err) {
+              next(err)
+            } else {
+              return res.status(200).json({ result: 0, data: book });
+            }
+          })
         })
-      }).catch(function (err) {
-        return next(err);
       })
-
     });
 };
 
@@ -348,3 +362,67 @@ exports.upload = function () {
       })
     });
 }
+
+exports.updateDownloadStatus = function() {
+  return compose()
+    .use(function (req, res, next) {
+      Book.findByIdAsync(req.query.id).then(function (book) {
+        if (!book) {
+          logger.debug("id not found: " + req.query.id);
+          return res.status(200).json({ result: -1 })
+        }
+
+        if (req.query.status == 1) {
+          book.status = 1
+        } else if (req.query.status == 2) {
+          book.status = 2
+        } else if (req.query.status == 4) {
+          book.status = 3
+        }
+
+        return book.saveAsync().then(book => {
+          logger.debug("update success: " + req.query.id);
+          let message = new Message({
+            title: '下载通知',
+            content: JSON.stringify(book),
+            userId: book.userId
+          });
+          return message.saveAsync().then(message => {
+            return res.status(200).json({ result: 0, data: book });
+          }).catch(function (err) {
+            logger.debug("update failed: " + req.query.id);
+            return res.status(200).json({ result: -2 })
+          });
+        }).catch(function (err) {
+          logger.debug("update failed: " + req.query.id);
+          return res.status(200).json({ result: -2 })
+        });
+      })
+    })
+}
+
+exports.download = function () {
+  return compose()
+    .use([
+      check('id').trim().notEmpty().withMessage('ID不能为空')
+        .custom((value, { req }) => {
+          if (!value.match(/^[0-9a-fA-F]{24}$/)) {
+            throw new Error('ID格式错误')
+          }
+          return true;
+        })
+    ])
+    .use(checkErrors)
+    .use(function (req, res, next) {
+      Book.findByIdAsync(req.query.id).then(function(book) {
+        if (book.type === 1) {
+          return res.status(200).json({ result: 0 });
+        }
+        req.book = book;
+        next();
+      }).catch(function (err) {
+        return next(err);
+      });
+    })
+    .use(startToDownload)
+};
