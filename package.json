@@ -9,6 +9,7 @@
     "axios": "^0.19.0",
     "body-parser": "^1.18.2",
     "ccap": "^0.6.10",
+    "command-line-args": "^5.1.1",
     "composable-middleware": "^0.3.0",
     "config": "^1.29.1",
     "connect-redis": "^4.0.3",
