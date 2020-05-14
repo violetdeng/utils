@@ -96,7 +96,7 @@ function initialState() {
       type: null,
       file: null,
       website: null,
-      attributes: null
+      attributes: {}
     },
     rules: {
       title: [
@@ -134,12 +134,9 @@ export default {
           return item.type === this.form.website
         }).attributes
 
-        if (!this.realValue.attributes) {
-          this.realValue.attributes = {}
-          attrs.forEach(item => {
-            this.$set(this.realValue.attributes, item.name, '')
-          })
-        }
+        //attrs.forEach(item => {
+        //  this.$set(this.realValue.attributes, item.name, '')
+        //})
 
         return attrs
       } else {
@@ -147,14 +144,26 @@ export default {
       }
     },
     form() {
+      let initWebsite = this.value.crawlers ? this.value.crawlers.website : this.value.website
+      let initAttributes = this.value.crawlers ? this.value.crawlers.attributes : this.value.attributes
+      let attributes = {}
+      if (this.realValue.website === null || this.realValue.website === initWebsite) {
+        attributes = initAttributes
+      }
+      if (this.realValue.attributes) {
+        attributes = {
+          ...attributes,
+          ...this.realValue.attributes
+        }
+      }
       return {
         id: this.value._id || this.value.id,
         title: this.realValue.title || this.value.title,
         author: this.realValue.author || this.value.author,
         type: this.realValue.type || this.value.type,
         file: this.realValue.file || this.value.file,
-        website: this.realValue.website || (this.value.crawlers ? this.value.crawlers.website : this.value.website),
-        attributes: this.realValue.attributes || (this.value.crawlers ? this.value.crawlers.attributes : this.value.attributes)
+        website: this.realValue.website || initWebsite,
+        attributes
       }
     },
     manageOpen: {
