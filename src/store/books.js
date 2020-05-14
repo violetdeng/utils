@@ -1,4 +1,4 @@
-import instance from "@/api";
+import instance, { baseURL } from "@/api";
 
 // initial state
 const state = {
@@ -38,7 +38,7 @@ const actions = {
       .then(result => {
         if (result.result === 0) {
           commit("add", {
-            _id: result.data,
+            _id: result.data._id,
             status: data.type === 1 ? 2 : 0,
             ...data
           })
@@ -49,13 +49,13 @@ const actions = {
       .finally(() => commit("change", false))
   },
 
-  rename({ commit }, data) {
+  update({ commit }, data) {
     commit("change", true);
     return instance
       .post("/books/update", data)
       .then(result => {
         if (result.result === 0) {
-          commit('rename', result.data)
+          commit('update', result.data)
         } else {
           return Promise.reject(result.errors)
         }
@@ -77,17 +77,33 @@ const actions = {
       .finally(() => commit("change", false))
   },
 
-  download({ commit }, id) {
+  refresh({ commit }, params) {
     commit("change", true);
     return instance
-      .get("/books/download", { params: { id } })
+      .get("/books/crawler/start", { params })
       .then(result => {
         if (result.result !== 0) {
           return Promise.reject(result.errors)
         }
       })
       .finally(() => commit("change", false))
-  }
+  },
+
+  download({ commit }, id) {
+    window.open(baseURL + "books/export?id=" + id, "_blank")
+  },
+
+  stop({ commit }, id) {
+    commit("change", true);
+    return instance
+      .get("/books/crawler/stop", { params: id })
+      .then(result => {
+        if (result.result !== 0) {
+          return Promise.reject(result.errors)
+        }
+      })
+      .finally(() => commit("change", false))
+  },
 };
 
 // mutations
@@ -112,16 +128,6 @@ const mutations = {
   },
 
   update(state, data) {
-    state.data = state.data.map(item => {
-      if (item._id !== data._id) {
-        return item
-      } else {
-        return data
-      }
-    })
-  },
-
-  rename(state, data) {
     state.data = state.data.map(item => {
       if (item._id !== data._id) {
         return item

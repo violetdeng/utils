@@ -2,7 +2,7 @@ import axios from "axios";
 import qs from "qs";
 import { router } from '@/main'
 
-const baseURL = "http://violetdeng.com:3000/"
+export const baseURL = "http://violetdeng.com:3000/"
 
 const instance = axios.create({
   baseURL,

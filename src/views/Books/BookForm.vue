@@ -1,25 +1,31 @@
 <template>
+<el-dialog
+  title="书籍管理"
+  :visible.sync="manageOpen"
+  :close-on-click-modal="false"
+  :close-on-press-escape="false"
+>
 <el-form ref="form" :model="form" :rules="rules" label-width="0">
   <el-form-item
     label="书籍名称"
     prop="title"
     label-width="100px"
   >
-    <el-input v-model="form.title"/>
+    <el-input :value="form.title" @input="changeFormValue('title', $event)"/>
   </el-form-item>
   <el-form-item
     label="作者"
     prop="author"
     label-width="100px"
   >
-    <el-input v-model="form.author"/>
+    <el-input :value="form.author" @input="changeFormValue('author', $event)"/>
   </el-form-item>
   <el-form-item
     label="类型"
     prop="type"
     label-width="100px"
     >
-    <el-radio-group v-model="form.type">
+    <el-radio-group :value="form.type" @input="changeFormValue('type', $event)">
       <el-radio-button :label="1" border>上传</el-radio-button>
       <el-radio-button :label="2" border>下载</el-radio-button>
     </el-radio-group>
@@ -44,8 +50,7 @@
       <el-button size="small" type="primary">点击上传</el-button>
       <div class="el-upload__tip" slot="tip">只能上传txt文件，且不超过50M</div>
     </el-upload>
-    <div v-if="signature">
-    </div>
+    <el-tag v-if="form.file" :title="form.file">已存在</el-tag>
   </el-form-item>
   </template>
   <template v-if="form.type === 2">
@@ -57,7 +62,7 @@
       ]"
       label-width="100px"
     >
-    <el-radio v-model="form.website" :label="item.type" v-for="item in websites">{{ item.title }}【{{ item.website }}】</el-radio>
+    <el-radio :value="form.website" :label="item.type" v-for="item in websites" @input="changeFormValue('website', $event)">{{ item.title }}【{{ item.website }}】</el-radio>
     </el-form-item>
     <el-form-item v-for="attr in attributes"
       :label="attr.title"
@@ -67,7 +72,7 @@
         { required: true, message: attr.title + '不能为空' }
       ]"
     >
-      <el-input v-model="form.attributes[attr.name]"></el-input>
+      <el-input :value="form.attributes[attr.name]" @input="changeFormValue('attributes', attr.name, $event)"></el-input>
     </el-form-item>
   </template>
   <el-form-item>
@@ -75,6 +80,7 @@
     <el-button @click="cancel">取消</el-button>
   </el-form-item>
 </el-form>
+</el-dialog>
 </template>
 
 <script>
@@ -82,11 +88,40 @@ import { mapGetters } from 'vuex'
 import api from '@/api'
 import schema from 'async-validator'
 
+function initialState() {
+  return {
+    realValue: {
+      title: null,
+      author: null,
+      type: null,
+      file: null,
+      website: null,
+      attributes: null
+    },
+    rules: {
+      title: [
+        { required: true, message: '书籍名称不能为空', trigger: 'blur' },
+      ],
+      author: [
+        { required: true, message: '作者不能为空', trigger: 'blur' },
+      ],
+      type: [
+        { required: true, trigger: 'change' }
+      ]
+    },
+    fileList: []
+  }
+}
+
 export default {
   name: 'BookForm',
   props: {
     value: {
       type: Object
+    },
+    open: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
@@ -99,40 +134,40 @@ export default {
           return item.type === this.form.website
         }).attributes
 
-        attrs.forEach(item => {
-          this.$set(this.form.attributes, item.name, '')
-        })
+        if (!this.realValue.attributes) {
+          this.realValue.attributes = {}
+          attrs.forEach(item => {
+            this.$set(this.realValue.attributes, item.name, '')
+          })
+        }
 
         return attrs
       } else {
         return []
       }
+    },
+    form() {
+      return {
+        id: this.value._id || this.value.id,
+        title: this.realValue.title || this.value.title,
+        author: this.realValue.author || this.value.author,
+        type: this.realValue.type || this.value.type,
+        file: this.realValue.file || this.value.file,
+        website: this.realValue.website || (this.value.crawlers ? this.value.crawlers.website : this.value.website),
+        attributes: this.realValue.attributes || (this.value.crawlers ? this.value.crawlers.attributes : this.value.attributes)
+      }
+    },
+    manageOpen: {
+      get() {
+        return this.open || false
+      },
+      set(v) {
+        this.cancel()
+      }
     }
   },
   data() {
-    return {
-      form: {
-        title: this.value.title || '',
-        author: this.value.author || '',
-        type: 1,
-        file: null,
-        website: null,
-        attributes: {}
-      },
-      rules: {
-        title: [
-          { required: true, message: '书籍名称不能为空', trigger: 'blur' },
-        ],
-        author: [
-          { required: true, message: '作者不能为空', trigger: 'blur' },
-        ],
-        type: [
-          { required: true, trigger: 'change' }
-        ]
-      },
-      signature: this.value.signature,
-      fileList: []
-    }
+    return initialState()
   },
   methods: {
     onSubmit() {
@@ -147,6 +182,7 @@ export default {
     cancel() {
       this.$refs.form.resetFields()
       this.$emit('cancel')
+      Object.assign(this.$data, initialState())
     },
     handleChange(file, fileList) {
       let name = file.name.replace('.txt', '')
@@ -157,8 +193,8 @@ export default {
         author = parts.shift()
         title = parts.join()
       }
-      if (!this.form.title) this.form.title = title
-      if (!this.form.author) this.form.author = author
+      if (!this.realValue.title) this.realValue.title = title
+      if (!this.realValue.author) this.realValue.author = author
       this.fileList = fileList.slice(-1);
     },
     uploadFile(file) {
@@ -172,11 +208,22 @@ export default {
       }).then(result => {
         if (result.result !== 0) {
           this.fileList = []
-          this.form.file = false
+          this.realValue.file = false
         } else {
-          this.form.file = result.data
+          this.realValue.file = result.data
         }
       })
+    },
+    changeFormValue(key, subkey, value) {
+      if (!value) {
+        value = subkey
+        this.realValue[key] = value
+      } else {
+        if (!this.realValue[key]) {
+          this.realValue[key] = {}
+        }
+        this.$set(this.realValue[key], subkey, value)
+      }
     }
   }
 }
