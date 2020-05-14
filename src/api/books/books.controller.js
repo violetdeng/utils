@@ -15,7 +15,7 @@ const Message = mongoose.model('Message');
 const compose = require('composable-middleware');
 const { check, validationResult } = require('express-validator');
 const config = require('../../config/env')
-const downloadConfig = require('../../crawlers');
+const crawlersConfig = require('../../crawlers');
 
 function checkErrors(req, res, next) {
   const errors = validationResult(req);
@@ -54,7 +54,7 @@ exports.all = function () {
           .limit(itemsPerPage)
           .sort(sortName)
           .exec().then(function (items) {
-            return res.status(200).json({ data: items, count: count, config: downloadConfig });
+            return res.status(200).json({ data: items, count: count, config: crawlersConfig });
           })
       })
     });
@@ -99,9 +99,9 @@ exports.add = function () {
       var book = new Book(req.body);
 
       book.userId = req.user._id
+      book.file = req.uploadPath + '/' + book.author + '-' + book.title + '.txt'
       if (book.type === 1) {
         book.status = 2
-        book.file = req.uploadPath + '/' + book.author + '-' + book.title + '.txt'
       } else if (book.type === 2) {
         book.crawlers.website = req.body.website
         book.crawlers.attributes = req.body.attributes
@@ -124,7 +124,7 @@ exports.add = function () {
         return next(err);
       });
     })
-    .use(startToDownload)
+    .use(startToCrawler)
 }
 
 exports.destroy = function () {
@@ -189,11 +189,14 @@ exports.update = function (req,res) {
       Book.findByIdAsync(req.body.id).then(function (book) {
         book.author = req.body.author
         book.title = req.body.title
-        if (book.type === 1) {
-          let newFile = req.uploadPath + '/' + req.body.author + '-' + req.body.title + '.txt'
-          fs.renameSync(book.file, newFile)
-          book.file = newFile
+
+        let newFile = req.uploadPath + '/' + req.body.author + '-' + req.body.title + '.txt'
+        if (book.type === 1 || (book.type === 2 && book.status === 2)) {
+          if (fs.existsSync(book.file)) {
+            fs.renameSync(book.file, newFile)
+          }
         }
+        book.file = newFile
 
         book.saveAsync().then(book => {
           return res.status(200).json({ result: 0, data: book });
@@ -204,7 +207,6 @@ exports.update = function (req,res) {
         next(err)
       })
     })
-    //.use(sendMail)
 }
 
 function createBookDir(req, res, next) {
@@ -224,12 +226,17 @@ function createBookDir(req, res, next) {
   })
 }
 
-function startToDownload(req, res, next) {
+function startToCrawler(req, res, next) {
   let book = req.book;
-  let cmd = "cd " + path.resolve('./src') + ";node crawler.js " + book._id;
+  let cmd = "cd " + path.resolve('./src')
+  if (req.query.onlyerrors == 1) {
+    cmd += ";node crawler.js --command=error --id=" + book._id
+  } else {
+    cmd += ";node crawler.js --id=" + book._id
+  }
   const postData = JSON.stringify({
     'cmd': cmd,
-    'cb': 'http://violetdeng.com:3000/books/change?id=' + book._id
+    'cb': 'http://violetdeng.com:3000/books/crawler/change?id=' + book._id
   });
 
   logger.debug(postData);
@@ -363,7 +370,7 @@ exports.upload = function () {
     });
 }
 
-exports.updateDownloadStatus = function() {
+exports.updateCrawlerStatus = function() {
   return compose()
     .use(function (req, res, next) {
       Book.findByIdAsync(req.query.id).then(function (book) {
@@ -401,7 +408,7 @@ exports.updateDownloadStatus = function() {
     })
 }
 
-exports.download = function () {
+exports.crawler = function () {
   return compose()
     .use([
       check('id').trim().notEmpty().withMessage('ID不能为空')
@@ -424,5 +431,45 @@ exports.download = function () {
         return next(err);
       });
     })
-    .use(startToDownload)
+    .use(startToCrawler)
+};
+
+exports.download = function () {
+  return compose()
+    .use([
+      check('id').trim().notEmpty().withMessage('ID不能为空')
+        .custom((value, { req }) => {
+          if (!value.match(/^[0-9a-fA-F]{24}$/)) {
+            throw new Error('ID格式错误')
+          }
+          return true;
+        })
+    ])
+    .use(checkErrors)
+    .use(function (req, res, next) {
+      Book.findByIdAsync(req.query.id).then(function(book) {
+        if (book.type === 2 && book.status != 2) {
+          return res.status(200).json({ result: -1 });
+        }
+
+        let filename = book.author + '-' + book.title + '.txt'
+        // 设置响应头
+        res.writeHead(200, {
+          'Content-Type': 'application/octet-stream',//告诉浏览器这是一个二进制文件
+          'Content-Disposition': 'attachment; filename=' + encodeURI(filename),//告诉浏览器这是一个需要下载的文件
+        });
+
+        // 得到文件输入流
+        var readStream = fs.createReadStream(book.file);
+        readStream.on('data', (chunk) => {
+          // 文档内容以二进制的格式写到response的输出流
+          res.write(chunk, 'binary');
+        });
+        readStream.on('end', () => {
+          res.end();
+        });
+      }).catch(function (err) {
+        return next(err);
+      });
+    })
 };

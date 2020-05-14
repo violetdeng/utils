@@ -9,12 +9,7 @@ function run(urls, book, cb) {
       book.crawlers.errors = errors;
       book.status = 3;
       saveBook(book, function () {
-        // TODO
-        //cb(ERRORS.FETCH_ERROR);
-        mergeBook(book, function () {
-          cb(ERRORS.FETCH_ERROR);
-          //cb(ERRORS.SUCC);
-        }, cb);
+        cb(ERRORS.FETCH_ERROR);
       }, cb);
     } else {
       book.status = 2;
@@ -44,6 +39,23 @@ exports.start = function(book, cb) {
           }, cb);
         }
       })
+    }, cb);
+  } else {
+    book.crawlers.errors = [
+      '配置错误'
+    ];
+    book.status = 3;
+    saveBook(book, function () {
+      cb(ERRORS.FETCH_ERROR);
+    }, cb);
+  }
+}
+
+exports.error = function(book, cb) {
+  if (book.crawlers.errors) {
+    book.status = 1;
+    saveBook(book, function () {
+      run(book.crawlers.errors, book, cb);
     }, cb);
   } else {
     book.crawlers.errors = [

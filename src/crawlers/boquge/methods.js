@@ -14,16 +14,19 @@ exports.fetchUrls = function(url, callback) {
     callback : function (error, res, done) {
       if (error) {
         logger.error(error);
-      }else{
+      } else {
         var $ = res.$;
         // $ is Cheerio by default
         //a lean implementation of core jQuery designed specifically for the server
         var urls = [];
+        var index = 0;
         $('#chapters-list a').each(function() {
           urls.push({
             title: $(this).text(),
-            url: $(this).attr('href')
-          })
+            url: $(this).attr('href'),
+            index
+          });
+          index ++;
         })
         callback(urls)
       }
@@ -38,7 +41,7 @@ exports.fetchUrls = function(url, callback) {
 exports.fetchContents = function(book, urls, callback) {
   var errors = [];
   var c = new Crawler({
-    maxConnections : 10,
+    maxConnections : 1,
     jQuery: {
       name: 'cheerio',
       options: {
@@ -51,22 +54,23 @@ exports.fetchContents = function(book, urls, callback) {
     },
     // This will be called for each crawled page
     callback : function (error, res, done) {
-      if(error){
+      if (error) {
         logger.error(error);
-      }else{
+      } else {
         var $ = res.$;
         // $ is Cheerio by default
         //a lean implementation of core jQuery designed specifically for the server
         fs.writeFileSync(res.options.filename, res.options.chapter + "\r\n\r\n")
-        var content = $('#txtContent').html()
+        var content = $(res.body).find('#txtContent').html()
         if (content) {
-          fs.writeFileSync(res.options.filename, content.replace('<br>', "\r\n"), {
+          fs.writeFileSync(res.options.filename, content.replace(/<br>/g, "\r\n"), {
             flag: 'a'
           })
         } else {
           errors.push({
             uri: res.options.uri,
-            title: res.options.chapter
+            title: res.options.chapter,
+            index: res.options.index
           })
         }
       }
@@ -76,12 +80,11 @@ exports.fetchContents = function(book, urls, callback) {
 
 
   urls.forEach(function (item, index) {
-    // TODO
-    if (index > 10) return;
     c.queue({
-      uri: 'https://www.boquge.com' + item.url,
+      uri: item.uri ? item.uri : 'https://www.boquge.com' + item.url,
       chapter: item.title,
-      filename: getBookPath(book) + index + '.txt'
+      index: item.index,
+      filename: getBookPath(book) + item.index + '.txt'
     });
   })
 
