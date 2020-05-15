@@ -80,7 +80,7 @@ exports.fetchContents = function(book, urls, callback) {
 
   urls.forEach(function (item, index) {
     c.queue({
-      uri: item.uri ? item.uri : 'https://www.sbiquge.com' + item.url,
+      uri: item.uri ? item.uri : ('https://www.sbiquge.com' + item.url),
       chapter: item.title,
       index: item.index,
       filename: getBookPath(book) + item.index + '.txt'

@@ -23,7 +23,7 @@ exports.fetchUrls = function(url, callback) {
         $('.acss a').each(function() {
           urls.push({
             title: $(this).text(),
-            url: $(this).attr('href'),
+            uri: (new URL($(this).attr('href'), url)).href,
             index
           });
           index ++;
@@ -80,7 +80,7 @@ exports.fetchContents = function(book, urls, callback) {
 
   urls.forEach(function (item, index) {
     c.queue({
-      uri: item.uri ? item.uri : 'https://www.sbiquge.com' + item.url,
+      uri: item.uri,
       chapter: indexToChinese(item.index + 1) + ' ' + item.title,
       index: item.index,
       filename: getBookPath(book) + item.index + '.txt'

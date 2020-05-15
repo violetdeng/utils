@@ -10,7 +10,10 @@ const ERRORS = {
   SUCC: 0,
   DB_ERROR: 1,
   MERGE_ERROR: 2,
-  FETCH_ERROR: 3
+  FETCH_ERROR: 3,
+  NOT_FOUND: 4,
+  PARAM_ERROR: 5,
+  CONFIG_ERROR: 6
 };
 exports.ERRORS = ERRORS;
 

@@ -114,7 +114,7 @@ exports.add = function () {
             if (err) {
               next(err)
             } else {
-              return res.status(200).json({ result: 0, id: book.id });
+              return res.status(200).json({ result: 0, data: book });
             }
           })
         } else {
