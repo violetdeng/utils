@@ -4,6 +4,7 @@ import createPersistedState from 'vuex-persistedstate'
 
 import user from './user'
 import books from './books'
+import words from './words'
 
 Vue.use(Vuex)
 
@@ -18,13 +19,23 @@ export default new Vuex.Store({
   actions: {
     SOCKET_messages({ commit }, payload) {
       payload.forEach(item => {
-        commit('books/update', JSON.parse(item.content))
+        switch (item.title) {
+          case '下载通知':
+            commit('books/update', JSON.parse(item.content))
+            break;
+          case '文字通知':
+            commit('words/update', JSON.parse(item.content))
+            break;
+          default:
+            console.log(item)
+        }
       })
     }
   },
   modules: {
     user,
-    books
+    books,
+    words
   },
   plugins: [createPersistedState({
     key: 'violet-tools',

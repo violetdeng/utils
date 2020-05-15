@@ -18,6 +18,10 @@
             <i class="el-icon-notebook-1"></i>
             <span slot="title">书籍</span>
           </el-menu-item>
+          <el-menu-item index="/words">
+            <i class="el-icon-document"></i>
+            <span slot="title">文字处理</span>
+          </el-menu-item>
         </el-menu>
       </el-aside>
       <el-main class="app-content">

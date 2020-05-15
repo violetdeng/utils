@@ -11,9 +11,11 @@
     border
     style="width: 100%; margin-bottom: 15px;">
     <el-table-column
-      prop="title"
       label="书名"
       width="300">
+      <template scope="scope">
+        <span @click="copy(scope.row)">{{ scope.row.title }}</span>
+      </template>
     </el-table-column>
     <el-table-column
       prop="author"
@@ -82,6 +84,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import clipboardy from 'copy-text-to-clipboard'
 import BookForm from './BookForm'
 
 export default {
@@ -158,6 +161,9 @@ export default {
     },
     stopCrawler(row) {
       this.$store.dispatch('books/stop', row._id)
+    },
+    copy(row) {
+      clipboardy(row.file)
     }
   }
 }

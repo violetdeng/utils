@@ -5,7 +5,7 @@ import Login from '@/views/Login.vue'
 
 Vue.use(VueRouter)
 
-let MainRoutes = ['vacations', 'books'].map((name) => {
+let MainRoutes = ['vacations', 'books', 'words'].map((name) => {
   let filename = name.charAt(0).toUpperCase() + name.slice(1)
   return {
     path: `/${name}`,
