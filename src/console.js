@@ -31,4 +31,10 @@ switch (options.command) {
   case 'replace':
     require('./console/replace.js').run(options._unknown || []);
     break;
+  case 'db':
+    require('./console/db.js').run(options._unknown || []);
+    break;
+  case 'user':
+    require('./console/user.js').run(options._unknown || []);
+    break;
 }

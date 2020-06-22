@@ -5,6 +5,7 @@ var User = mongoose.model('User');
 //var Logs = mongoose.model('Logs');
 var ccap = require('ccap')();
 var config = require('../../config/env')
+
 /**
  * 获取验证码
  */
@@ -24,6 +25,7 @@ exports.getMe = function (req,res) {
     return res.status(401).send();
   });
 }
+
 //后台获取用户列表
 exports.getUserList = function (req,res,next) {
   var currentPage = (parseInt(req.query.currentPage) > 0)?parseInt(req.query.currentPage):1;

@@ -1,0 +1,33 @@
+extends layout
+block style
+  link(rel='stylesheet', type='text/css', href='/element-ui/index.css')
+  style.
+    .login-page { height: 100%; }
+    .login-wrapper { height: 100%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; background: rgba(0, 0, 0, 0.4); }
+    .login-box { position: relative; margin: 0 auto; }
+    .title { text-align: center; color: #3fa085; font-family: fantasy; }
+    .error-message { margin-bottom: 20px; }
+  script(src='/vue.js')
+  script(src='/element-ui/index.js')
+block content
+  .app-wrapper(id='app')
+    .login-page
+      el-row(:gutter="20",class="login-wrapper")
+        el-col(:md="10",:sm="14",class="login-box")
+          el-card
+            h1.title
+              i.icon-logo
+              | Violet's Tools
+            h2 登录
+            p 一个个人效率提升的工具网站
+            el-form(:model="userForm",:rules="userFormRules",ref="userForm",label-width="80px",method="post")
+              -if(msg)
+                el-alert(title="#{msg}",type="error",class="error-message")
+              el-form-item(label="用户名",prop="username")
+                el-input(v-model="userForm.username",name="username")
+              el-form-item(label="密码",prop="password")
+                el-input(type="password",v-model="userForm.password",name="password")
+              el-form-item
+                el-button(type="primary",@click="login('userForm')",icon="el-icon-user-solid") 登录
+            el-button(type="primary",icon="el-icon-user-solid") Github
+  script(src='/login.js')
