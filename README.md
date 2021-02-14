@@ -1,5 +1,7 @@
 # 日常工具
 
+![](https://img.shields.io/github/stars/violetdeng/utils.svg)
+
 ## 使用说明
 
 ```
